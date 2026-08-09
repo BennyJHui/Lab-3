@@ -1,0 +1,119 @@
+`define Initial  4'b0000
+`define Check1_A 4'b0001
+`define Check2_A 4'b0010
+`define Check3_A 4'b0011
+`define Check4_A 4'b0100
+`define Check5_A 4'b0101
+`define Check1_B 4'b0110
+`define Check2_B 4'b0111
+`define Check3_B 4'b1000
+`define Check4_B 4'b1001
+`define Check5_B 4'b1010
+`define Unlock_A 4'b1011
+`define Lock_B   4'b1100
+
+module lab3_top (
+    input      [3:0] KEY,
+    input      [3:0] SW,
+    output reg [6:0] HEX0,
+    output reg [6:0] HEX1,
+    output reg [6:0] HEX2,
+    output reg [6:0] HEX3,
+    output reg [6:0] HEX4,
+    output reg [6:0] HEX5
+);
+
+    wire clk, reset;
+    reg [3:0] state = `Initial;
+
+    assign clk = ~KEY[0];
+    assign reset = ~KEY[3];
+
+    always_ff @(posedge clk) begin
+        if (reset) begin
+            state <= `Initial;
+        end else begin
+            case(state)
+                `Initial: state <= (SW[3:0] == 4'b0111) ? `Check1_A : `Check1_B;
+                
+                `Check1_A: state <= (SW[3:0] == 4'b0011) ? `Check2_A : `Check2_B;
+
+                `Check2_A: state <= (SW[3:0] == 4'b0111) ? `Check3_A : `Check3_B;
+
+                `Check3_A: state <= (SW[3:0] == 4'b1000) ? `Check4_A : `Check4_B;
+
+                `Check4_A: state <= (SW[3:0] == 4'b0010) ? `Check5_A : `Check5_B;
+
+                `Check5_A: state <= (SW[3:0] == 4'b0110) ? `Unlock_A : `Lock_B;
+
+                `Check1_B: state <= `Check2_B;
+
+                `Check2_B: state <= `Check3_B;
+
+                `Check3_B: state <= `Check4_B;
+
+                `Check4_B: state <= `Check5_B;
+
+                `Check5_B: state <= `Lock_B;
+
+                `Lock_B: state <= `Lock_B;
+
+                `Unlock_A: state <= `Unlock_A;
+
+                default: state <= `Initial;
+            endcase
+        end
+    end
+
+    always_comb begin    
+        if (state <= 4'b1010) begin
+            HEX5[6:0] = 7'b1111111;
+            HEX4[6:0] = 7'b1111111; 
+            HEX3[6:0] = 7'b1111111; 
+            HEX2[6:0] = 7'b1111111;
+            HEX1[6:0] = 7'b1111111; 
+            case(SW)
+                4'b0000: HEX0[6:0] = 7'b1000000;
+                4'b0001: HEX0[6:0] = 7'b1111001;
+                4'b0010: HEX0[6:0] = 7'b0100100;
+                4'b0011: HEX0[6:0] = 7'b0110000;
+                4'b0100: HEX0[6:0] = 7'b0011001;
+                4'b0101: HEX0[6:0] = 7'b0010010;
+                4'b0110: HEX0[6:0] = 7'b0000011;
+                4'b0111: HEX0[6:0] = 7'b1111000;
+                4'b1000: HEX0[6:0] = 7'b0000000;
+                4'b1001: HEX0[6:0] = 7'b0011000;
+                default: begin
+                    HEX5[6:0] = 7'b1111111;
+                    HEX4[6:0] = 7'b0000110; //E
+                    HEX3[6:0] = 7'b0101111; //r
+                    HEX2[6:0] = 7'b0101111; //r
+                    HEX1[6:0] = 7'b1000000; //O
+                    HEX0[6:0] = 7'b0101111; //r
+                end
+            endcase
+        end
+
+        if (state == 4'b1011) begin
+            HEX5[6:0] = 7'b1111111;
+            HEX4[6:0] = 7'b1111111; 
+            HEX3[6:0] = 7'b1000000; //O
+            HEX2[6:0] = 7'b0001100; //P
+            HEX1[6:0] = 7'b0000110; //E
+            HEX0[6:0] = 7'b0101011; //n
+        end
+
+        if (state == 4'b1100) begin
+            HEX5[6:0] = 7'b1000110; //C
+            HEX4[6:0] = 7'b1000111; //L
+            HEX3[6:0] = 7'b1000000; //O
+            HEX2[6:0] = 7'b0010010; //S
+            HEX1[6:0] = 7'b0000110; //E
+            HEX0[6:0] = 7'b0100001; //d
+        end
+    end
+
+
+
+
+endmodule
